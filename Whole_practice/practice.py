@@ -271,3 +271,61 @@ wb.save("employees_data.xlsx")
 formual='=SUM(D2:D52)'
 ws['D53']=formual
 wb.save("employees_data.xlsx")
+
+
+#Applying filter and copy data to another sheet
+ws=wb['Employees']
+for row in ws.iter_rows(min_row=1,values_only=True):
+    if row[4]=="Buner":
+        print(row)
+ws3=wb.create_sheet("Buner Employees")
+target_row=2
+for row in ws.iter_rows(min_row=1,values_only=True):
+    if row[4]=="Buner":
+        for col_nm, value in enumerate(row,start=1):
+            ws3.cell(row=target_row,column=col_nm).value=value
+            target_row +=1
+wb.save("employees_data.xlsx")
+
+#Count cities count
+from collections import Counter
+ws=wb["Employees"]
+cities=[]
+for row in range (2,53):
+    city=ws.cell(row=row,column=5).value
+    if city:
+        cities.append(city)
+city_counts=Counter(cities)
+print(city_counts)
+wb.save("employees_data.xlsx")
+
+#Now a new summary table in employees sheet
+ws["G1"]="city"
+ws["H1"]="Count"
+rownum=2
+for city,count in city_counts.items():
+    ws.cell(row=rownum,column=7).value=city
+    ws.cell(row=rownum,column=8).value=count
+    rownum +=1
+
+#Now create Pie chart
+from openpyxl.chart import PieChart, Reference
+pie=PieChart()
+pie.title="Employees by city"
+data=Reference(
+    ws,
+    min_col=8,
+    min_row=1,
+    max_row=rownum-1
+)
+lables=Reference(
+    ws,
+    min_col=7,
+    min_row=2,
+    max_row=rownum-1
+)
+pie.add_data(data,titles_from_data=True)
+pie.set_categories(lables)
+ws.add_chart(pie,"J2")
+wb.save("employees_data.xlsx")
+print("ALL DONE")
